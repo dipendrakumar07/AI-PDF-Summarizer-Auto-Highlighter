@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Summarizer</title>
+     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+        
+        .file-input-label:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+        
+        .file-input-label.has-file {
+            border-style: solid;
+            background: #e8eaff;
+            border-color: #667eea;
+        }
+        
+        .file-input-text {
+            text-align: center;
+        }
+        
+        .file-input-text svg {
+            width: 40px;
+            height: 40px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .file-input-text p {
+            color: #667eea;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .file-input-text small {
+            color: #999;
+            display: block;
+        }
+        
+        .file-name {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8eaff;
+            border-radius: 5px;
+            color: #667eea;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .file-name.show {
+            display: block;
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c33;
+        }
+        
+        .success {
+            background: #efe;
+            color: #3c3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3c3;
+        }
+        
+        .result {
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .result h3 {
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        
+        .result p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        
+        .download-link {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            margin-top: 10px;
+            transition: background 0.3s ease;
+        }
+        
+        .download-link:hover {
+            background: #764ba2;
+        }
+        
+        .keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .keyword-tag {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+    </style> 
+</head>
+<body>
+    <div class="container">
+        <h1> Document Summarizer</h1>        
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        
+        {% if download_url %}
+            <div class="success"> Document Summarize Succesfully.</div>
+            
+            <a href="{{ download_url }}" class="download-link" download>⬇️ Download PDF Summary</a>
+        {% endif %}
+        
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Select Document</label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="file-input" name="file" accept=".pdf,.docx,.ppt,.pptx" required>
+                    <label for="file-input" class="file-input-label">
+                        <div class="file-input-text">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3v-6" />
+                            </svg>
+                            <p>Click to upload </p>
+                            <small> Upload Ducument(Max 50MB)</small>
+                        </div>
+                    </label>
+                    <div class="file-name" id="file-name"></div>
+                </div>
+            </div>
+        
+                         <button type="submit">Done👍</button>
+
+        </form>
+    </div>
+    
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const fileLabel = document.querySelector('.file-input-label');
+        const fileName = document.getElementById('file-name');
+        
+        // Handle file selection
+        fileInput.addEventListener('change', function(e) {
+            if (this.files.length > 0) {
+                const name = this.files[0].name;
+                fileName.textContent = '✓ Selected: ' + name;
+                fileName.classList.add('show');
+                fileLabel.classList.add('has-file');
+            }
+        });
+        
+        // Handle drag and drop
+        fileLabel.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#764ba2';
+            this.style.background = '#f0e8ff';
+        });
+        
+        fileLabel.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#667eea';
+            this.style.background = fileInput.files.length > 0 ? '#e8eaff' : '#f8f9ff';
+        });
+        
+        fileLabel.addEventListener('drop', function(e) {
+            e.preventDefault();
+            fileInput.files = e.dataTransfer.files;
+            fileInput.dispatchEvent(new Event('change'));
+            this.style.borderColor = '#667eea';
+        });
+    </script>
+</body>
+</html>
